@@ -61,6 +61,8 @@ class TMDBVideoService {
       for (const movie of movies) {
         const trailerKey = await this.getVideoTrailer(movie.id, ContentType.MOVIE);
 
+        console.log(`Movie "${movie.title}" (${movie.id}): trailerKey = ${trailerKey || 'NONE'}`);
+
         const videoItem: VideoItem = {
           id: movie.id,
           title: movie.title,
@@ -84,6 +86,9 @@ class TMDBVideoService {
 
         videoItems.push(videoItem);
       }
+
+      const videosWithTrailers = videoItems.filter(v => v.videoKey).length;
+      console.log(`Total videos: ${videoItems.length}, with trailers: ${videosWithTrailers}`);
 
       return videoItems;
     } catch (error) {
@@ -221,6 +226,8 @@ class TMDBVideoService {
       const response = await tmdbClient.axiosInstance.get<TMDBPaginatedResponse<TMDBVideo>>(endpoint);
       const videos = response.data.results;
 
+      console.log(`Fetching trailers for ${contentType} ${contentId}: found ${videos?.length || 0} videos`);
+
       // Prioritize official trailers, then teasers
       const trailer = videos.find(video =>
         (video.type === 'Trailer' || video.type === 'Teaser') &&
@@ -230,6 +237,10 @@ class TMDBVideoService {
         (video.type === 'Trailer' || video.type === 'Teaser') &&
         video.site === 'YouTube'
       );
+
+      if (trailer) {
+        console.log(`Found trailer: ${trailer.key} (${trailer.type}, official: ${trailer.official})`);
+      }
 
       return trailer?.key;
     } catch (error) {

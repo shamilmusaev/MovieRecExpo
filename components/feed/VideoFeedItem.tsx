@@ -120,6 +120,14 @@ const VideoFeedItem: React.FC<VideoFeedItemProps> = ({
       }
     : undefined;
 
+  // Debug: log video source for active video
+  if (isActive && !videoSource) {
+    console.warn(`Active video "${video.title}" has no videoKey!`);
+  }
+  if (isActive && videoSource) {
+    console.log(`Active video "${video.title}" with YouTube ID: ${videoSource.videoId}`);
+  }
+
   return (
     <View style={[styles.container, { width: SCREEN_WIDTH, height: SCREEN_HEIGHT }]}>
       {/* Video Player */}

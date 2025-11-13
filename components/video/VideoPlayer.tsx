@@ -2,7 +2,7 @@
 // Uses react-native-youtube-iframe for YouTube video playback
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { StyleSheet, View, Dimensions, Text } from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { VideoPlayerProps } from '../../types/feed';
 import VideoErrorFallback from './VideoErrorFallback';
@@ -28,7 +28,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Handle player state changes
   const handleStateChange = useCallback((state: string) => {
-    console.log('Video player state changed:', state);
+    console.log('Video player state changed:', state, 'videoId:', videoSource?.type === 'youtube' ? videoSource.videoId : 'N/A');
 
     switch (state) {
       case 'playing':
@@ -52,7 +52,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       default:
         break;
     }
-  }, [playerReady, onReady]);
+  }, [playerReady, onReady, videoSource]);
 
   // Handle playback errors
   const handleError = useCallback((error: string) => {
@@ -98,21 +98,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Control playback based on isActive prop
   useEffect(() => {
-    if (playerReady && playerRef.current) {
-      if (isActive) {
-        setIsPlaying(true);
-      } else {
-        setIsPlaying(false);
-      }
+    console.log('isActive changed:', isActive, 'playerReady:', playerReady);
+    if (isActive) {
+      // Start playing immediately when video becomes active
+      setIsPlaying(true);
+    } else {
+      // Pause when video is not active
+      setIsPlaying(false);
     }
   }, [isActive, playerReady]);
 
   // Note: Mute/unmute is handled via the mute prop on YoutubePlayer component (line 145)
   // No need for imperative mute/unMute calls
 
-  // If no video source, return empty view
+  // If no video source, show message
   if (!videoSource) {
-    return <View style={[styles.container, { height, width }]} />;
+    console.warn('VideoPlayer: No videoSource provided');
+    return (
+      <View style={[styles.container, { height, width }]}>
+        <Text style={{ color: 'white', textAlign: 'center', marginTop: 50 }}>
+          No video available
+        </Text>
+      </View>
+    );
   }
 
   // Show error fallback if there's an error
@@ -128,6 +136,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // YouTube video player
   if (videoSource.type === 'youtube') {
+    console.log('Rendering YouTube player with videoId:', videoSource.videoId, 'isActive:', isActive, 'isPlaying:', isPlaying);
+
     return (
       <View style={[styles.container, { height, width }]}>
         <YoutubePlayer
