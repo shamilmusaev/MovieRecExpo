@@ -70,7 +70,11 @@ Build a vertical video feed screen that:
 
 ### Technical Dependencies
 - TMDB API service (already implemented in `services/tmdb/`)
-- Expo AV or react-native-video for video playback
+- **Expo AV for native video playback** (AVPlayer on iOS)
+  - **Important**: Native player only, NO YouTube iframe embedding
+  - Extract direct video stream URLs from YouTube
+  - No YouTube UI/branding visible during playback
+- YouTube stream extraction utility (e.g., ytdl-core compatible or server proxy)
 - React Navigation for tab navigation
 - AsyncStorage/MMKV for storing user interactions
 

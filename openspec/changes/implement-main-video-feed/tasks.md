@@ -24,18 +24,21 @@ Define:
 ---
 
 #### Task 2: Extend TMDB service with video fetching
-- **Deliverable**: TMDB service methods for fetching videos and trailers
-- **Files**: `services/tmdb/client.ts`, `services/tmdb/videos.ts`
-- **Validation**: Test API calls return expected data structure
+- **Deliverable**: TMDB service methods for fetching videos and extracting stream URLs
+- **Files**: `services/tmdb/client.ts`, `services/tmdb/videos.ts`, `utils/youtubeStreamExtractor.ts`
+- **Validation**: Test API calls return VideoItem[] with direct stream URLs
 - **Dependencies**: Task 1
-- **Estimated time**: 3 hours
+- **Estimated time**: 4 hours
 
 Implement:
 - `getTrendingMovies(page, genreId?)` → VideoItem[]
 - `getPopularTVShows(page, genreId?)` → VideoItem[]
 - `getAnimeContent(page, genreId?)` → VideoItem[]
-- `getVideoTrailer(contentId, contentType)` → YouTube URL
+- `getVideoTrailer(contentId, contentType)` → Extract YouTube key from TMDB
+- `extractYouTubeStreamURL(youtubeKey)` → Direct video stream URL for native playback
 - Error handling and response transformation
+
+**Important**: Return direct stream URLs, not YouTube embed URLs. The video player must use native playback without YouTube iframe.
 
 ---
 
@@ -61,18 +64,26 @@ Implement:
 ### Phase 2: Video Player Component
 
 #### Task 4: Build basic VideoPlayer component
-- **Deliverable**: Reusable video player component with playback controls
-- **Files**: `components/video/VideoPlayer.tsx`
-- **Validation**: Video plays and pauses correctly, mute toggle works
+- **Deliverable**: Native video player component without YouTube UI
+- **Files**: `components/video/VideoPlayer.tsx`, `utils/youtubeExtractor.ts`
+- **Validation**: Video plays natively without YouTube branding/controls
 - **Dependencies**: None
-- **Estimated time**: 4 hours
+- **Estimated time**: 5 hours
 
 Features:
+- **Native playback using Expo AV** (AVPlayer on iOS)
+- Extract direct video stream URLs from YouTube (no iframe)
 - Play/pause on active state change
 - Mute/unmute toggle
-- Handle video URLs from YouTube (via Expo AV or react-native-video)
+- Custom overlay controls only (no YouTube UI)
 - Expose progress events
 - Clean up resources on unmount
+
+Technical approach:
+- Use library like `react-native-youtube-iframe` with `webViewProps` to extract stream URL
+- Or use `ytdl-core` compatible solution for React Native
+- Pass extracted stream URL to Expo Video component
+- Render full-screen native video without YouTube branding
 
 ---
 

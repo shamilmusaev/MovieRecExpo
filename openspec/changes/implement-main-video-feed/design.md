@@ -83,10 +83,16 @@ The main video feed follows a component-based architecture with clear separation
 - `hasError`: boolean
 
 ### 4. VideoPlayer
-**Responsibility**: Video playback logic
+**Responsibility**: Native video playback without YouTube UI
+
+**Implementation**:
+- Uses **Expo AV** or **react-native-video** for native playback
+- Extracts direct video stream URLs from YouTube (no iframe embedding)
+- Custom overlay controls only (no YouTube branding/UI)
+- Full-screen native video rendering
 
 **Props**:
-- `videoUrl`: string
+- `videoUrl`: string (direct stream URL, not YouTube embed)
 - `isActive`: boolean
 - `isMuted`: boolean
 - `onProgressUpdate`: (progress: number) => void
@@ -97,6 +103,8 @@ The main video feed follows a component-based architecture with clear separation
 - Pause when `isActive` = false
 - Preload next video in background
 - Resource cleanup on unmount
+- Native video player (AVPlayer on iOS)
+- No YouTube UI elements visible
 
 ### 5. VideoOverlay
 **Responsibility**: UI overlay with title, actions, and metadata
@@ -296,15 +304,36 @@ Disable video playback
 ## Platform Considerations
 
 ### iOS
-- Use native video player (AVPlayer via Expo AV)
+- **Use native video player (AVPlayer via Expo AV)**
+- **NO YouTube iframe embedding** - extract direct stream URLs instead
 - Handle audio session interruptions (calls, notifications)
 - Respect device Silent mode
 - Support picture-in-picture (future)
 
 ### Future Android Support
-- Use ExoPlayer
+- Use ExoPlayer (native player)
 - Handle back button navigation
 - Respect system volume controls
+
+### YouTube Stream Extraction
+
+**Critical**: Videos MUST play natively without YouTube UI/branding.
+
+**Approach**:
+1. Get YouTube video key from TMDB API
+2. Extract direct video stream URL using one of:
+   - `ytdl-core` compatible library for React Native
+   - `react-native-youtube-iframe` with stream extraction
+   - Server-side proxy to extract stream URLs
+3. Pass stream URL to Expo Video/AVPlayer
+4. Render full-screen native video
+
+**Important constraints**:
+- No YouTube logo visible
+- No YouTube controls (play/pause/seek bar)
+- No "Watch on YouTube" watermark during playback
+- Only custom app overlay with title, genres, and action buttons
+- Video appears as native app content, not embedded web content
 
 ## Testing Strategy
 

@@ -129,8 +129,28 @@ The system SHALL provide basic playback controls accessible to users.
 
 ---
 
+### Requirement: Native video player implementation
+The system SHALL use a native video player without YouTube UI elements.
+
+#### Scenario: Video plays with native controls only
+- **Given** a video is playing in the feed
+- **Then** the video is rendered using Expo AV or react-native-video
+- **And** no YouTube branding or UI elements are visible
+- **And** no YouTube iframe is embedded
+- **And** the video appears as native app content
+- **And** only custom app controls (mute, play/pause overlay) are shown
+
+#### Scenario: Extract direct video stream
+- **Given** a YouTube video key from TMDB
+- **When** the video player needs to play the video
+- **Then** the app extracts the direct video stream URL from YouTube
+- **And** passes the stream URL to the native video player
+- **And** the video plays seamlessly without YouTube UI
+
+---
+
 ### Requirement: Video source integration
-The system SHALL fetch videos from TMDB API and play them via YouTube.
+The system SHALL fetch videos from TMDB API and extract YouTube video streams for native playback.
 
 #### Scenario: Fetch trailer from TMDB
 - **Given** a movie/show item from the feed
@@ -138,7 +158,7 @@ The system SHALL fetch videos from TMDB API and play them via YouTube.
 - **Then** the app requests video data from TMDB `/movie/{id}/videos` endpoint
 - **And** selects the first "Trailer" or "Teaser" type video
 - **And** extracts the YouTube video key
-- **And** constructs a playable YouTube URL
+- **And** obtains the direct video stream URL for native playback
 
 #### Scenario: Fallback to poster if no trailer
 - **Given** a movie has no trailers in TMDB
