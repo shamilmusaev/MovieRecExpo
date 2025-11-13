@@ -223,16 +223,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             playsinline: 1, // Important for iOS inline playback
           }}
           webViewStyle={{
-            opacity: 0.99,
+            opacity: 1, // Changed from 0.99 - full opacity for visibility
+            backgroundColor: 'transparent',
           }}
           webViewProps={{
             allowsInlineMediaPlayback: true,
             mediaPlaybackRequiresUserAction: false,
             allowsFullscreenVideo: true,
-            javaScriptEnabled: true, // Ensure JavaScript is enabled
-            domStorageEnabled: true, // Enable DOM storage
+            javaScriptEnabled: true,
+            domStorageEnabled: true,
             startInLoadingState: false,
-            scalesPageToFit: true,
+            scalesPageToFit: false, // Changed to false - let video maintain aspect ratio
+            scrollEnabled: false, // Disable scrolling
+            bounces: false,
+            showsHorizontalScrollIndicator: false,
+            showsVerticalScrollIndicator: false,
           }}
         />
 

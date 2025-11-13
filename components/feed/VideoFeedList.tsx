@@ -187,6 +187,9 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
   const flatListProps = useMemo(() => ({
     ref: flatListRef,
     style: styles.container,
+    contentContainerStyle: {
+      paddingBottom: 90, // Add padding for tab bar (absolute positioned)
+    },
     data: videos,
     renderItem: renderVideoItem,
     keyExtractor: keyExtractor,
