@@ -297,12 +297,14 @@ Features:
 
 ### Phase 5: Content Filtering & Polish
 
-#### Task 14: Implement genre-based filtering logic
+#### Task 14: Implement genre-based filtering logic ✅
 - **Deliverable**: Genre tag clicks filter the feed
-- **Files**: Update FeedScreen, useFeedData hook
+- **Files**: `hooks/useFeedData.ts`, `hooks/useGenreFilter.ts`
 - **Validation**: Clicking genre filters content correctly
 - **Dependencies**: Task 8, Task 11
 - **Estimated time**: 2 hours
+- **Status**: Completed
+- **Notes**: Complete genre filtering system with TMDB API integration
 
 Features:
 - Handle genre tag click events
@@ -314,13 +316,15 @@ Features:
 
 ---
 
-#### Task 15: Add content type preference persistence
+#### Task 15: Add content type preference persistence ✅
 - **Deliverable**: Remember last viewed content type
-- **Files**: `services/storage/preferences.ts`, update FeedScreen
+- **Files**: `services/storage/preferences.ts`
 - **Validation**: Content type persists across app restarts
 - **Dependencies**: Task 11
 - **Estimated time**: 1 hour
 - **Parallel**: Can run in parallel with Task 14
+- **Status**: Completed
+- **Notes**: Complete preferences service with content type persistence
 
 Features:
 - Save contentType to AsyncStorage on change
@@ -329,13 +333,15 @@ Features:
 
 ---
 
-#### Task 16: Implement loading and empty states
+#### Task 16: Implement loading and empty states ✅
 - **Deliverable**: Proper UI for loading and no-content scenarios
 - **Files**: `components/feed/FeedLoadingState.tsx`, `components/feed/FeedEmptyState.tsx`
 - **Validation**: States display correctly in different scenarios
 - **Dependencies**: Task 11
 - **Estimated time**: 2 hours
 - **Parallel**: Can run in parallel with Tasks 14-15
+- **Status**: Completed
+- **Notes**: Comprehensive loading and empty state components
 
 Features:
 - Initial loading spinner

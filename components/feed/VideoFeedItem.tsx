@@ -157,6 +157,7 @@ const VideoFeedItem: React.FC<VideoFeedItemProps> = ({
             {video.genres && video.genres.length > 0 && (
               <GenreTagList
                 genres={video.genres.slice(0, 3)}
+                activeGenreIds={[]} // Will be passed from parent
                 onGenreClick={onGenreClick}
                 maxVisible={3}
               />
