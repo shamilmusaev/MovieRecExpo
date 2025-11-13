@@ -5,6 +5,14 @@ import axios from 'axios';
 import { tmdbClient } from './client';
 import { VideoItem, ContentType } from '../../types';
 import { TMDBMovie, TMDBTVShow, TMDBGenre, TMDBVideo, TMDBPaginatedResponse } from '../../types';
+import {
+  validateTMDBMovie,
+  validateTMDBTVShow,
+  validateTMDBGenre,
+  validateTMDBVideo,
+  validateVideoItem,
+  safeLog
+} from '../../utils/validation';
 
 class TMDBVideoService {
   private genreCache: Map<ContentType, TMDBGenre[]> = new Map();
@@ -22,7 +30,23 @@ class TMDBVideoService {
         },
       });
 
-      const movies = response.data.results;
+      // Validate response structure
+      if (!response.data || !Array.isArray(response.data.results)) {
+        throw new Error('Invalid API response structure for trending movies');
+      }
+
+      const movies = response.data.results.filter(movie => {
+        const validation = validateTMDBMovie(movie);
+        if (!validation.isValid) {
+          safeLog('warn', 'Skipping invalid movie data', {
+            movieId: movie.id,
+            title: movie.title,
+            errors: validation.errors
+          });
+          return false;
+        }
+        return true;
+      });
 
       // Fetch genres if not cached
       if (!this.genreCache.has(ContentType.MOVIE)) {
@@ -62,7 +86,7 @@ class TMDBVideoService {
 
       return videoItems;
     } catch (error) {
-      console.error('Error fetching trending movies:', error);
+      safeLog('error', 'Error fetching trending movies', error);
       throw new Error('Failed to fetch trending movies');
     }
   }

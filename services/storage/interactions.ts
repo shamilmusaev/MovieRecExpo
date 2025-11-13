@@ -32,7 +32,7 @@ class InteractionsService {
   /**
    * Save like interaction for a video
    */
-  async saveLike(videoId: number, isLiked: boolean): Promise<void> {
+  async saveLike(videoId: number, isLiked: boolean, contentType: ContentType = ContentType.MOVIE): Promise<void> {
     try {
       const likes = await this.getLikedVideos();
       const likesSet = new Set(likes);
@@ -49,7 +49,7 @@ class InteractionsService {
       await this.saveSignal({
         id: `like_${videoId}_${Date.now()}`,
         videoId,
-        contentType: ContentType.MOVIE, // Will be updated when we have content type info
+        contentType,
         signalType: 'like',
         value: isLiked ? 1 : -1,
         timestamp: new Date().toISOString(),

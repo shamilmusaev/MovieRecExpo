@@ -136,6 +136,13 @@ export const useVideoCache = ({
   // Auto-preload when current index changes
   useEffect(() => {
     smartPreload();
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (preloadTimeoutRef.current) {
+        clearTimeout(preloadTimeoutRef.current);
+      }
+    };
   }, [smartPreload]);
 
   return {

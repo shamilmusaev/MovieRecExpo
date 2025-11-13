@@ -45,11 +45,17 @@ export const useFeedData = ({
   // Load videos based on content type and genre filters
   const loadVideos = useCallback(async (
     page: number = 1,
-    append: boolean = false
+    append: boolean = false,
+    abortSignal?: AbortSignal
   ): Promise<void> => {
     try {
       setLoading(true);
       clearError();
+
+      // Check if request was aborted
+      if (abortSignal?.aborted) {
+        return;
+      }
 
       let newVideos: VideoItem[] = [];
 
@@ -96,6 +102,11 @@ export const useFeedData = ({
           throw new Error(`Unknown content type: ${contentType}`);
       }
 
+      // Check if request was aborted after API calls
+      if (abortSignal?.aborted) {
+        return;
+      }
+
       // Remove duplicates based on ID
       const uniqueVideos = newVideos.filter((video, index, self) =>
         index === self.findIndex(v => v.id === video.id)
@@ -103,6 +114,11 @@ export const useFeedData = ({
 
       // Sort by popularity
       uniqueVideos.sort((a, b) => b.popularity - a.popularity);
+
+      // Check if request was aborted before state update
+      if (abortSignal?.aborted) {
+        return;
+      }
 
       // Update state
       if (append) {
@@ -115,10 +131,17 @@ export const useFeedData = ({
       setHasMore(uniqueVideos.length >= pageSize);
 
     } catch (err) {
+      // Don't set error if request was aborted
+      if (abortSignal?.aborted) {
+        return;
+      }
       console.error('Error loading feed data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load videos');
     } finally {
-      setLoading(false);
+      // Only set loading to false if not aborted
+      if (!abortSignal?.aborted) {
+        setLoading(false);
+      }
     }
   }, [contentType, selectedGenreIds, pageSize, clearError]);
 
@@ -127,15 +150,19 @@ export const useFeedData = ({
     if (loading || !hasMore) return;
 
     const nextPage = currentPage + 1;
+    const abortController = new AbortController();
+
     setCurrentPage(nextPage);
-    await loadVideos(nextPage, true);
+    await loadVideos(nextPage, true, abortController.signal);
   }, [loading, hasMore, currentPage, loadVideos]);
 
   // Refresh videos
   const refresh = useCallback(async (): Promise<void> => {
+    const abortController = new AbortController();
+
     setCurrentPage(1);
     setHasMore(true);
-    await loadVideos(1, false);
+    await loadVideos(1, false, abortController.signal);
   }, [loadVideos]);
 
   // Handle content type change
@@ -160,10 +187,30 @@ export const useFeedData = ({
     }
   }, [selectedGenreIds, clearError]);
 
-  // Initial load
+  // Initial load - fix infinite loop by using proper dependencies
   useEffect(() => {
-    loadVideos(1, false);
-  }, [loadVideos]);
+    const abortController = new AbortController();
+
+    loadVideos(1, false, abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
+  }, []); // Empty dependency array - only run on mount
+
+  // Reload when content type or genre filters change
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    // Only reload if we have a valid content type
+    if (contentType && selectedGenreIds !== undefined) {
+      loadVideos(1, false, abortController.signal);
+    }
+
+    return () => {
+      abortController.abort();
+    };
+  }, [contentType, JSON.stringify(selectedGenreIds)]); // Stringify for proper comparison
 
   return {
     videos,
