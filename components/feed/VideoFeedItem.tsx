@@ -23,6 +23,7 @@ const VideoFeedItem: React.FC<VideoFeedItemProps> = ({
   video,
   isActive,
   isMuted,
+  activeGenreIds,
   onLike,
   onFavorite,
   onShare,
@@ -157,7 +158,7 @@ const VideoFeedItem: React.FC<VideoFeedItemProps> = ({
             {video.genres && video.genres.length > 0 && (
               <GenreTagList
                 genres={video.genres.slice(0, 3)}
-                activeGenreIds={[]} // Will be passed from parent
+                activeGenreIds={activeGenreIds || []}
                 onGenreClick={onGenreClick}
                 maxVisible={3}
               />

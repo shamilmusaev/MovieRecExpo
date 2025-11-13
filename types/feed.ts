@@ -8,6 +8,7 @@ export interface VideoFeedItemProps {
   video: VideoItem;
   isActive: boolean;
   isMuted: boolean;
+  activeGenreIds?: number[];
   onLike?: (videoId: number, isLiked: boolean) => void;
   onFavorite?: (videoId: number, isFavorited: boolean) => void;
   onShare?: (video: VideoItem) => void;

@@ -56,6 +56,10 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
     maxCacheSize: 5,
   });
 
+  // For now, we don't have active genre filtering in VideoFeedList
+  // This would be implemented when we connect genre filtering to the feed
+  const activeGenreIds: number[] = [];
+
   // Handle refresh
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -125,6 +129,7 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
         video={item}
         isActive={isActive}
         isMuted={isMuted}
+        activeGenreIds={[]} // TODO: Pass actual active genre IDs when filtering is implemented
         onLike={handleLike}
         onFavorite={handleFavorite}
         onShare={handleShare}
