@@ -9,6 +9,7 @@ class TMDBClient {
   private apiKey: string;
   private baseURL: string;
   private imageBaseURL: string;
+  public axiosInstance: any;
 
   constructor() {
     this.apiKey = EXPO_PUBLIC_TMDB_API_KEY || '';
@@ -16,14 +17,19 @@ class TMDBClient {
     this.imageBaseURL = EXPO_PUBLIC_TMDB_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p';
 
     if (!this.apiKey) {
+      console.error('TMDB API key is missing!');
       throw new Error('TMDB API key is required. Please set EXPO_PUBLIC_TMDB_API_KEY in your .env file.');
     }
 
-    // Configure axios defaults
-    axios.defaults.baseURL = this.baseURL;
-    axios.defaults.params = {
-      api_key: this.apiKey,
-    };
+    console.log('TMDB Client initialized with baseURL:', this.baseURL);
+
+    // Create axios instance with configuration
+    this.axiosInstance = axios.create({
+      baseURL: this.baseURL,
+      params: {
+        api_key: this.apiKey,
+      },
+    });
   }
 
   // TODO: Implement API methods

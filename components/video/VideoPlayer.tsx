@@ -107,15 +107,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [isActive, playerReady]);
 
-  // Handle mute/unmute
-  useEffect(() => {
-    if (playerReady && playerRef.current) {
-      playerRef.current.mute();
-      if (!isMuted) {
-        playerRef.current.unMute();
-      }
-    }
-  }, [isMuted, playerReady]);
+  // Note: Mute/unmute is handled via the mute prop on YoutubePlayer component (line 145)
+  // No need for imperative mute/unMute calls
 
   // If no video source, return empty view
   if (!videoSource) {

@@ -1,7 +1,6 @@
 // TMDB Video Service
 // Fetches movies/TV shows with their associated trailer videos
 
-import axios from 'axios';
 import { tmdbClient } from './client';
 import { VideoItem, ContentType } from '../../types';
 import { TMDBMovie, TMDBTVShow, TMDBGenre, TMDBVideo, TMDBPaginatedResponse } from '../../types';
@@ -22,13 +21,15 @@ class TMDBVideoService {
    */
   async getTrendingMovies(page: number = 1, genreId?: number): Promise<VideoItem[]> {
     try {
+      console.log('Fetching trending movies, page:', page, 'genreId:', genreId);
       // Fetch trending movies
-      const response = await axios.get<TMDBPaginatedResponse<TMDBMovie>>('/trending/movie/week', {
+      const response = await tmdbClient.axiosInstance.get<TMDBPaginatedResponse<TMDBMovie>>('/trending/movie/week', {
         params: {
           page,
           with_genres: genreId,
         },
       });
+      console.log('Received movies:', response.data?.results?.length || 0);
 
       // Validate response structure
       if (!response.data || !Array.isArray(response.data.results)) {
@@ -97,7 +98,7 @@ class TMDBVideoService {
   async getPopularTVShows(page: number = 1, genreId?: number): Promise<VideoItem[]> {
     try {
       // Fetch popular TV shows
-      const response = await axios.get<TMDBPaginatedResponse<TMDBTVShow>>('/tv/popular', {
+      const response = await tmdbClient.axiosInstance.get<TMDBPaginatedResponse<TMDBTVShow>>('/tv/popular', {
         params: {
           page,
           with_genres: genreId,
@@ -156,7 +157,7 @@ class TMDBVideoService {
     try {
       // Anime is typically TV shows with animation genre (16) from Japan
       // We'll filter for Japanese animation content
-      const response = await axios.get<TMDBPaginatedResponse<TMDBTVShow>>('/discover/tv', {
+      const response = await tmdbClient.axiosInstance.get<TMDBPaginatedResponse<TMDBTVShow>>('/discover/tv', {
         params: {
           page,
           with_genres: genreId || 16, // Animation genre ID
@@ -217,7 +218,7 @@ class TMDBVideoService {
     try {
       const endpoint = contentType === ContentType.MOVIE ? `/movie/${contentId}/videos` : `/tv/${contentId}/videos`;
 
-      const response = await axios.get<TMDBPaginatedResponse<TMDBVideo>>(endpoint);
+      const response = await tmdbClient.axiosInstance.get<TMDBPaginatedResponse<TMDBVideo>>(endpoint);
       const videos = response.data.results;
 
       // Prioritize official trailers, then teasers
@@ -244,7 +245,7 @@ class TMDBVideoService {
     try {
       const endpoint = contentType === ContentType.MOVIE ? '/genre/movie/list' : '/genre/tv/list';
 
-      const response = await axios.get<{ genres: TMDBGenre[] }>(endpoint);
+      const response = await tmdbClient.axiosInstance.get<{ genres: TMDBGenre[] }>(endpoint);
       this.genreCache.set(contentType, response.data.genres);
     } catch (error) {
       console.error(`Error fetching ${contentType} genres:`, error);
@@ -270,7 +271,7 @@ class TMDBVideoService {
     try {
       const endpoint = contentType === ContentType.MOVIE ? '/search/movie' : '/search/tv';
 
-      const response = await axios.get<TMDBPaginatedResponse<TMDBMovie | TMDBTVShow>>(endpoint, {
+      const response = await tmdbClient.axiosInstance.get<TMDBPaginatedResponse<TMDBMovie | TMDBTVShow>>(endpoint, {
         params: {
           query,
           page,
