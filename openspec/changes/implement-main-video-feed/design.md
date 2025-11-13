@@ -83,16 +83,23 @@ The main video feed follows a component-based architecture with clear separation
 - `hasError`: boolean
 
 ### 4. VideoPlayer
-**Responsibility**: Native video playback without YouTube UI
+**Responsibility**: Video playback with optimal approach for content source
 
-**Implementation**:
-- Uses **Expo AV** or **react-native-video** for native playback
-- Extracts direct video stream URLs from YouTube (no iframe embedding)
-- Custom overlay controls only (no YouTube branding/UI)
-- Full-screen native video rendering
+**Implementation Options**:
+
+#### **Option A: YouTube Videos (Recommended for TMDB trailers)**
+- Uses `react-native-youtube-iframe` for YouTube content
+- ✅ Compliant with YouTube ToS
+- ✅ Reliable playback
+- ⚠️ YouTube branding visible (required by YouTube)
+
+#### **Option B: Direct Video URLs (Alternative)**
+- Uses `expo-video` (modern API, SDK 52+) or `expo-av` (legacy)
+- Requires alternative video sources (not YouTube)
+- Full control over UI and playback
 
 **Props**:
-- `videoUrl`: string (direct stream URL, not YouTube embed)
+- `videoSource`: { type: 'youtube', videoId: string } | { type: 'direct', url: string }
 - `isActive`: boolean
 - `isMuted`: boolean
 - `onProgressUpdate`: (progress: number) => void
@@ -101,10 +108,20 @@ The main video feed follows a component-based architecture with clear separation
 **Features**:
 - Auto-play when `isActive` = true
 - Pause when `isActive` = false
-- Preload next video in background
+- Smart preloading based on video source type
 - Resource cleanup on unmount
-- Native video player (AVPlayer on iOS)
-- No YouTube UI elements visible
+- Native video player for direct URLs (AVPlayer on iOS, ExoPlayer on Android)
+
+**Modern API Example (expo-video)**:
+```tsx
+import { useVideoPlayer, VideoView } from 'expo-video';
+
+const player = useVideoPlayer(videoSource, player => {
+  player.loop = false;
+  player.muted = isMuted;
+  if (isActive) player.play();
+});
+```
 
 ### 5. VideoOverlay
 **Responsibility**: UI overlay with title, actions, and metadata
@@ -304,36 +321,65 @@ Disable video playback
 ## Platform Considerations
 
 ### iOS
-- **Use native video player (AVPlayer via Expo AV)**
-- **NO YouTube iframe embedding** - extract direct stream URLs instead
+- **Native video playback** via AVPlayer (expo-video) or AVFoundation (expo-av)
 - Handle audio session interruptions (calls, notifications)
-- Respect device Silent mode
-- Support picture-in-picture (future)
+- Respect device Silent mode and audio routing
+- Support picture-in-picture (future enhancement)
+- Test with various network conditions
 
 ### Future Android Support
-- Use ExoPlayer (native player)
-- Handle back button navigation
+- Use ExoPlayer for native playback
+- Handle back button navigation properly
 - Respect system volume controls
+- Support Android TV (future)
 
-### YouTube Stream Extraction
+## Video Source Strategy
 
-**Critical**: Videos MUST play natively without YouTube UI/branding.
+### YouTube Videos (TMDB Trailers)
 
-**Approach**:
-1. Get YouTube video key from TMDB API
-2. Extract direct video stream URL using one of:
-   - `ytdl-core` compatible library for React Native
-   - `react-native-youtube-iframe` with stream extraction
-   - Server-side proxy to extract stream URLs
-3. Pass stream URL to Expo Video/AVPlayer
-4. Render full-screen native video
+**Reality Check**: Direct YouTube stream extraction is **not recommended**:
+- ❌ Violates YouTube Terms of Service
+- ❌ Unreliable - URLs expire, extraction methods break frequently
+- ❌ No React Native libraries support this reliably
+- ❌ Requires constant maintenance
 
-**Important constraints**:
-- No YouTube logo visible
-- No YouTube controls (play/pause/seek bar)
-- No "Watch on YouTube" watermark during playback
-- Only custom app overlay with title, genres, and action buttons
-- Video appears as native app content, not embedded web content
+**Recommended Approach**:
+1. Get YouTube video key from TMDB API (`/movie/{id}/videos` endpoint)
+2. Use `react-native-youtube-iframe` component:
+   ```tsx
+   import YoutubePlayer from 'react-native-youtube-iframe';
+
+   <YoutubePlayer
+     height={300}
+     videoId={youtubeVideoKey}
+     play={isActive}
+     onChangeState={handleStateChange}
+   />
+   ```
+3. Accept YouTube branding as part of the experience (required by ToS)
+
+**Alternative Approach (Non-YouTube Sources)**:
+1. Find alternative trailer sources with direct MP4 URLs:
+   - Vimeo API (provides direct video URLs)
+   - Self-hosted trailers
+   - Other video CDNs with direct streaming
+2. Use `expo-video` (modern) or `expo-av` (legacy) for full UI control:
+   ```tsx
+   // Modern expo-video approach
+   import { useVideoPlayer, VideoView } from 'expo-video';
+
+   const player = useVideoPlayer(videoUrl, player => {
+     player.muted = isMuted;
+     if (isActive) player.play();
+   });
+
+   return <VideoView player={player} style={styles.video} />;
+   ```
+
+**Constraints**:
+- If using YouTube: YouTube branding/controls are **required** (ToS compliance)
+- If using direct URLs: Full UI control, but need alternative video sources
+- Choose based on project priorities: UX control vs. content availability
 
 ## Testing Strategy
 

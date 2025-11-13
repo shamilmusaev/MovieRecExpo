@@ -70,13 +70,21 @@ Build a vertical video feed screen that:
 
 ### Technical Dependencies
 - TMDB API service (already implemented in `services/tmdb/`)
-- **Expo AV for native video playback** (AVPlayer on iOS)
-  - **Important**: Native player only, NO YouTube iframe embedding
-  - Extract direct video stream URLs from YouTube
-  - No YouTube UI/branding visible during playback
-- YouTube stream extraction utility (e.g., ytdl-core compatible or server proxy)
+- **Video Playback Options** (Choose one based on requirements):
+  - **Option 1 (Recommended)**: `react-native-youtube-iframe` for YouTube videos
+    - ✅ Official YouTube support, no ToS violations
+    - ✅ Reliable and maintained
+    - ⚠️ Shows YouTube branding (unavoidable with official API)
+  - **Option 2**: `expo-video` (new API in SDK 52+) for direct video URLs
+    - ✅ Modern API with `useVideoPlayer()` hook and `VideoView` component
+    - ✅ Better performance than legacy `expo-av`
+    - ✅ Native playback (AVPlayer on iOS, ExoPlayer on Android)
+    - ❌ Requires non-YouTube video sources (Vimeo, direct MP4 URLs)
+  - **Option 3**: Legacy `expo-av` with `Video` component
+    - ⚠️ Older API, consider migrating to `expo-video`
+    - ❌ Cannot reliably extract YouTube stream URLs (violates ToS)
 - React Navigation for tab navigation
-- AsyncStorage/MMKV for storing user interactions
+- AsyncStorage for storing user interactions
 
 ### Proposal Dependencies
 - None (this is a foundational feature)
@@ -97,17 +105,35 @@ Build a vertical video feed screen that:
 
 ## Risks and Mitigation
 
+### Risk: YouTube stream extraction is technically unfeasible
+**Reality**: Direct YouTube stream URL extraction violates YouTube ToS and is unreliable
+**Mitigation**:
+- **Recommended**: Use `react-native-youtube-iframe` with YouTube branding (compliant)
+- **Alternative**: Switch to alternative video sources (Vimeo, direct MP4 URLs from other APIs)
+- **Fallback**: Show poster with "Watch on YouTube" button when videos unavailable
+
 ### Risk: YouTube video blocking/unavailability
-**Mitigation**: Implement fallback UI showing poster image with message and option to open on YouTube
+**Mitigation**: Implement fallback UI showing poster image with message and option to open in YouTube app
 
 ### Risk: Performance issues with video preloading
-**Mitigation**: Only preload next video, implement resource cleanup on scroll
+**Mitigation**:
+- Only preload next video when current video plays for >3 seconds
+- Limit to 1-2 videos in memory maximum
+- Clear video cache on memory warnings
+- **Note**: Preloading may not work reliably with YouTube iframe approach
 
 ### Risk: TMDB API rate limiting
-**Mitigation**: Implement caching layer, batch requests efficiently
+**Mitigation**: Implement caching layer (AsyncStorage), batch requests efficiently
 
 ### Risk: Poor UX on slow connections
-**Mitigation**: Show loading indicators, allow browsing with delayed playback
+**Mitigation**: Show loading indicators, progressive image loading, allow browsing with delayed playback
+
+### Risk: expo-av vs expo-video API migration
+**Context**: `expo-video` is the modern replacement for `expo-av` Video component (SDK 52+)
+**Mitigation**:
+- Start with `expo-video` if using direct video URLs (not YouTube)
+- Use `expo-av` only if staying with SDK 51 or earlier
+- Both APIs support native playback (AVPlayer/ExoPlayer)
 
 ## Timeline Estimate
 

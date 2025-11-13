@@ -24,21 +24,23 @@ Define:
 ---
 
 #### Task 2: Extend TMDB service with video fetching
-- **Deliverable**: TMDB service methods for fetching videos and extracting stream URLs
-- **Files**: `services/tmdb/client.ts`, `services/tmdb/videos.ts`, `utils/youtubeStreamExtractor.ts`
-- **Validation**: Test API calls return VideoItem[] with direct stream URLs
+- **Deliverable**: TMDB service methods for fetching videos with YouTube keys
+- **Files**: `services/tmdb/client.ts`, `services/tmdb/videos.ts`
+- **Validation**: Test API calls return VideoItem[] with YouTube video keys
 - **Dependencies**: Task 1
-- **Estimated time**: 4 hours
+- **Estimated time**: 3 hours
 
 Implement:
 - `getTrendingMovies(page, genreId?)` → VideoItem[]
 - `getPopularTVShows(page, genreId?)` → VideoItem[]
 - `getAnimeContent(page, genreId?)` → VideoItem[]
-- `getVideoTrailer(contentId, contentType)` → Extract YouTube key from TMDB
-- `extractYouTubeStreamURL(youtubeKey)` → Direct video stream URL for native playback
+- `getVideoTrailer(contentId, contentType)` → Extract YouTube key from TMDB `/movie/{id}/videos` endpoint
 - Error handling and response transformation
 
-**Important**: Return direct stream URLs, not YouTube embed URLs. The video player must use native playback without YouTube iframe.
+**Important**:
+- Return YouTube video keys (e.g., "dQw4w9WgXcQ") from TMDB API
+- Do NOT attempt to extract direct stream URLs (violates YouTube ToS)
+- Video player will use `react-native-youtube-iframe` for playback
 
 ---
 
@@ -64,41 +66,70 @@ Implement:
 ### Phase 2: Video Player Component
 
 #### Task 4: Build basic VideoPlayer component
-- **Deliverable**: Native video player component without YouTube UI
-- **Files**: `components/video/VideoPlayer.tsx`, `utils/youtubeExtractor.ts`
-- **Validation**: Video plays natively without YouTube branding/controls
-- **Dependencies**: None
-- **Estimated time**: 5 hours
+- **Deliverable**: Video player component supporting YouTube content
+- **Files**: `components/video/VideoPlayer.tsx`
+- **Validation**: Video plays reliably with proper controls
+- **Dependencies**: Install `react-native-youtube-iframe` dependency
+- **Estimated time**: 4 hours
+
+**Recommended Approach (YouTube videos from TMDB)**:
+- Install: `npx expo install react-native-youtube-iframe react-native-webview`
+- Use `react-native-youtube-iframe` for YouTube videos
+- Props: `videoId` (YouTube key), `isActive`, `isMuted`, `onProgress`, `onError`
 
 Features:
-- **Native playback using Expo AV** (AVPlayer on iOS)
-- Extract direct video stream URLs from YouTube (no iframe)
 - Play/pause on active state change
 - Mute/unmute toggle
-- Custom overlay controls only (no YouTube UI)
-- Expose progress events
+- Progress tracking via `onChangeState` callback
+- Error handling for blocked/unavailable videos
 - Clean up resources on unmount
 
-Technical approach:
-- Use library like `react-native-youtube-iframe` with `webViewProps` to extract stream URL
-- Or use `ytdl-core` compatible solution for React Native
-- Pass extracted stream URL to Expo Video component
-- Render full-screen native video without YouTube branding
+**Alternative Approach (Direct video URLs - if switching from YouTube)**:
+- Use `expo-video` (modern, SDK 52+) or `expo-av` (legacy)
+- Requires alternative video sources (Vimeo, direct MP4 URLs)
+- Full UI control, no YouTube restrictions
+
+Example implementation:
+```tsx
+import YoutubePlayer from 'react-native-youtube-iframe';
+
+<YoutubePlayer
+  height={400}
+  videoId={youtubeVideoKey}
+  play={isActive}
+  mute={isMuted}
+  onChangeState={handleStateChange}
+  onError={handleError}
+/>
+```
 
 ---
 
 #### Task 5: Implement video preloading logic
-- **Deliverable**: Preloading mechanism for next video
-- **Files**: `components/video/VideoPlayer.tsx`, `hooks/useVideoPreload.ts`
-- **Validation**: Next video loads in background, playback is instant
+- **Deliverable**: Optimized video loading strategy
+- **Files**: `components/video/VideoPlayer.tsx`, `hooks/useVideoCache.ts`
+- **Validation**: Smooth transitions between videos, efficient memory usage
 - **Dependencies**: Task 4
-- **Estimated time**: 3 hours
+- **Estimated time**: 2 hours
+
+**Note**: YouTube iframe players have limited preloading capabilities compared to native video.
 
 Features:
-- Custom hook `useVideoPreload(currentIndex, videos)`
-- Preload video at index+1 when current video plays for >2s
-- Release preloaded videos >2 positions away
-- Memory management (max 3 videos in memory)
+- Cache YouTube video IDs for next 3 videos
+- Prefetch video metadata (thumbnail, title) for smooth UI
+- For YouTube: Player initializes on viewport entry (cannot truly preload)
+- For direct URLs (if using expo-video): Implement true preloading
+- Memory management: Release off-screen players
+- Strategy: Prioritize smooth UX over aggressive preloading
+
+Implementation:
+```tsx
+const useVideoCache = (currentIndex: number, videos: VideoItem[]) => {
+  // Cache next 2-3 video IDs and metadata
+  // YouTube players can't be preloaded, but metadata can
+  // Initialize player when video enters viewport
+};
+```
 
 ---
 
