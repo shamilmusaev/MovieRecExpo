@@ -2,7 +2,7 @@
 // Uses react-native-youtube-iframe for YouTube video playback
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, Dimensions, Text } from 'react-native';
+import { StyleSheet, View, Dimensions, Text, TouchableOpacity } from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { VideoPlayerProps } from '../../types/feed';
 import VideoErrorFallback from './VideoErrorFallback';
@@ -24,6 +24,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [playerReady, setPlayerReady] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [showPlayButton, setShowPlayButton] = useState(true);
   const playerRef = useRef<any>(null);
 
   // Handle player state changes
@@ -33,6 +34,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     switch (state) {
       case 'playing':
         setIsPlaying(true);
+        setShowPlayButton(false); // Hide play button when video starts
         if (!playerReady) {
           setPlayerReady(true);
           onReady?.();
@@ -43,6 +45,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         break;
       case 'ended':
         setIsPlaying(false);
+        setShowPlayButton(true); // Show play button when video ends
         // Video ended - could trigger next video
         break;
       case 'unstarted':
@@ -134,6 +137,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     );
   }
 
+  // Handle manual play button press
+  const handlePlayPress = useCallback(() => {
+    console.log('Play button pressed');
+    setShowPlayButton(false);
+    setIsPlaying(true);
+  }, []);
+
   // YouTube video player
   if (videoSource.type === 'youtube') {
     console.log('Rendering YouTube player with videoId:', videoSource.videoId, 'isActive:', isActive, 'isPlaying:', isPlaying);
@@ -169,6 +179,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             allowsFullscreenVideo: true,
           }}
         />
+
+        {/* Play Button Overlay for iOS */}
+        {isActive && showPlayButton && (
+          <View style={styles.playButtonOverlay}>
+            <TouchableOpacity
+              style={styles.playButton}
+              onPress={handlePlayPress}
+              activeOpacity={0.8}
+            >
+              <View style={styles.playIcon}>
+                <Text style={styles.playIconText}>▶</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   }
@@ -194,6 +219,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  playButtonOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  playButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  playIcon: {
+    marginLeft: 4, // Center the triangle visually
+  },
+  playIconText: {
+    fontSize: 32,
+    color: '#000',
   },
 });
 
