@@ -39,13 +39,13 @@ export interface GenreTagListProps {
   activeGenreIds?: number[];
   maxVisible?: number;
   onGenreClick?: (genreId: number) => void;
-  style?: any;
+  style?: import('react-native').ViewStyle;
 }
 
 export interface ContentTypeTabsProps {
   activeTab: ContentType;
   onTabChange: (contentType: ContentType) => void;
-  style?: any;
+  style?: import('react-native').ViewStyle;
 }
 
 export interface VideoFeedListProps {

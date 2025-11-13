@@ -29,6 +29,12 @@ class InteractionsService {
   private readonly favoritesKey = 'user_favorites';
   private readonly signalsKey = 'user_signals';
 
+  // Storage limits to prevent unlimited growth
+  private readonly MAX_LIKES = 10000;
+  private readonly MAX_FAVORITES = 5000;
+  private readonly MAX_SIGNALS = 1000;
+  private readonly STORAGE_CLEANUP_THRESHOLD = 0.8; // Clean when 80% full
+
   /**
    * Save like interaction for a video
    */
@@ -41,6 +47,11 @@ class InteractionsService {
         likesSet.add(videoId);
       } else {
         likesSet.delete(videoId);
+      }
+
+      // Check storage limit before saving
+      if (likesSet.size > this.MAX_LIKES) {
+        await this.cleanupStorage();
       }
 
       await AsyncStorage.setItem(this.likesKey, JSON.stringify([...likesSet]));
@@ -149,15 +160,78 @@ class InteractionsService {
 
       storedSignals.unshift(newSignal); // Add to beginning (most recent first)
 
-      // Keep only last 1000 signals to prevent storage bloat
-      if (storedSignals.length > 1000) {
-        storedSignals.splice(1000);
+      // Keep only last MAX_SIGNALS to prevent storage bloat
+      if (storedSignals.length > this.MAX_SIGNALS) {
+        storedSignals.splice(this.MAX_SIGNALS);
       }
 
       await AsyncStorage.setItem(this.signalsKey, JSON.stringify(storedSignals));
     } catch (error) {
       console.error('Error saving signal:', error);
       // Don't throw error for signals - they're not critical for user experience
+    }
+  }
+
+  /**
+   * Clean up old interactions when storage gets too large
+   */
+  private async cleanupStorage(): Promise<void> {
+    try {
+      // Check and clean likes
+      const likes = await this.getLikedVideos();
+      if (likes.length > this.MAX_LIKES * this.STORAGE_CLEANUP_THRESHOLD) {
+        const trimmedLikes = likes.slice(-this.MAX_LIKES);
+        await AsyncStorage.setItem(this.likesKey, JSON.stringify(trimmedLikes));
+      }
+
+      // Check and clean favorites
+      const favorites = await this.getFavoriteVideos();
+      if (favorites.length > this.MAX_FAVORITES * this.STORAGE_CLEANUP_THRESHOLD) {
+        const trimmedFavorites = favorites.slice(-this.MAX_FAVORITES);
+        await AsyncStorage.setItem(this.favoritesKey, JSON.stringify(trimmedFavorites));
+      }
+
+      // Signals are already limited in saveSignal method
+    } catch (error) {
+      console.error('Error cleaning up storage:', error);
+    }
+  }
+
+  /**
+   * Get storage usage statistics
+   */
+  async getStorageStats(): Promise<{
+    likesCount: number;
+    favoritesCount: number;
+    signalsCount: number;
+    estimatedSize: number; // in bytes (rough estimate)
+  }> {
+    try {
+      const [likes, favorites, signals] = await Promise.all([
+        this.getLikedVideos(),
+        this.getFavoriteVideos(),
+        this.getSignals(),
+      ]);
+
+      // Rough size estimation
+      const likesSize = JSON.stringify(likes).length * 2; // 2 bytes per char
+      const favoritesSize = JSON.stringify(favorites).length * 2;
+      const signalsSize = JSON.stringify(signals).length * 2;
+
+      return {
+        likesCount: likes.length,
+        favoritesCount: favorites.length,
+        signalsCount: signals.length,
+        estimatedSize: likesSize + favoritesSize + signalsSize,
+      };
+    } catch (error) {
+      console.error('Error getting storage stats:', error);
+      return {
+        likesCount: 0,
+        favoritesCount: 0,
+        signalsCount: 0,
+        estimatedSize: 0,
+      };
     }
   }
 

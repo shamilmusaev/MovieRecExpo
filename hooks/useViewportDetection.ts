@@ -13,7 +13,10 @@ interface UseViewportDetectionProps {
 }
 
 interface UseViewportDetectionReturn {
-  viewabilityConfig: any;
+  viewabilityConfig: {
+    itemVisiblePercentThreshold?: number;
+    minimumViewTime?: number;
+  };
   handleViewableItemsChanged: (info: ViewableItemsChanged) => void;
   activeIndex: number | null;
   visibleIndices: number[];

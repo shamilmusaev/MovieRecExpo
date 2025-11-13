@@ -12,10 +12,11 @@ import {
   ViewToken,
   Text,
 } from 'react-native';
-import { VideoFeedListProps } from '../../types/feed';
+import { VideoFeedListProps, ViewableItemsChanged } from '../../types/feed';
 import VideoFeedItem from './VideoFeedItem';
 import { useViewportDetection } from '../../hooks/useViewportDetection';
 import { useVideoCache } from '../../hooks/useVideoCache';
+import { VideoItem } from '../../types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,8 +39,8 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
     handleViewableItemsChanged: handleViewportChange,
     activeIndex,
   } = useViewportDetection({
-    onViewableItemsChanged: useCallback((info: any) => {
-      onViewableItemsChanged?.(info as any);
+    onViewableItemsChanged: useCallback((info: ViewableItemsChanged) => {
+      onViewableItemsChanged?.(info);
     }, [onViewableItemsChanged]),
     viewabilityConfig: {
       itemVisiblePercentThreshold: 60, // Consider item viewable at 60%
@@ -83,7 +84,7 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
     // TODO: Connect to interactions service
   }, []);
 
-  const handleShare = useCallback((video: any) => {
+  const handleShare = useCallback((video: VideoItem) => {
     console.log(`Sharing video: ${video.title}`);
     // TODO: Implement native share functionality
   }, []);
@@ -110,12 +111,12 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
   }, []);
 
   // Handle video press (for potential detailed view)
-  const handleVideoItemPress = useCallback((video: any) => {
+  const handleVideoItemPress = useCallback((video: VideoItem) => {
     onVideoPress?.(video);
   }, [onVideoPress]);
 
   // Render individual video item
-  const renderVideoItem = useCallback(({ item, index }: { item: any; index: number }) => {
+  const renderVideoItem = useCallback(({ item, index }: { item: VideoItem; index: number }) => {
     const isActive = activeIndex === index;
 
     return (
@@ -175,7 +176,7 @@ const VideoFeedList: React.FC<VideoFeedListProps> = ({
   }, [loading, videos.length]);
 
   // Memoized key extractor
-  const keyExtractor = useCallback((item: any) => `video-${item.id}`, []);
+  const keyExtractor = useCallback((item: VideoItem) => `video-${item.id}`, []);
 
   // Optimized FlatList configuration
   const flatListProps = useMemo(() => ({
