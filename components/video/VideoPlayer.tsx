@@ -26,6 +26,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showPlayButton, setShowPlayButton] = useState(true);
   const playerRef = useRef<any>(null);
+  const currentVideoIdRef = useRef<string>('');
+  const playRequestedRef = useRef(false);
 
   // Handle player state changes
   const handleStateChange = useCallback((state: string) => {
@@ -94,10 +96,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Handle player ready
   const handleReady = useCallback(() => {
-    console.log('Video player ready');
+    console.log('Video player ready, playRequested:', playRequestedRef.current);
     setPlayerReady(true);
     onReady?.();
-  }, [onReady]);
+
+    // If playback was requested before player was ready, start now
+    if (playRequestedRef.current && isActive) {
+      console.log('Auto-starting playback after player ready');
+      setTimeout(() => {
+        if (playerRef.current) {
+          console.log('Calling seekTo(0) to start playback');
+          playerRef.current.seekTo(0);
+        }
+      }, 300); // Small delay to ensure player is fully initialized
+    }
+  }, [onReady, isActive]);
+
+  // Track videoId changes - reset player state
+  useEffect(() => {
+    const newVideoId = videoSource?.type === 'youtube' ? videoSource.videoId : '';
+
+    if (newVideoId && newVideoId !== currentVideoIdRef.current) {
+      console.log('VideoId changed from', currentVideoIdRef.current, 'to', newVideoId);
+      currentVideoIdRef.current = newVideoId;
+
+      // Reset state for new video
+      setPlayerReady(false);
+      setShowPlayButton(true);
+      playRequestedRef.current = false;
+
+      // If this video is active, request playback after player is ready
+      if (isActive) {
+        playRequestedRef.current = true;
+      }
+    }
+  }, [videoSource, isActive]);
 
   // Control playback based on isActive prop
   useEffect(() => {
@@ -105,9 +138,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (isActive) {
       // Start playing immediately when video becomes active
       setIsPlaying(true);
+      playRequestedRef.current = true;
+
+      // If player is ready, try to start playback via ref
+      if (playerReady && playerRef.current) {
+        console.log('Player ready and active - calling seekTo(0)');
+        setTimeout(() => {
+          playerRef.current?.seekTo(0);
+        }, 100);
+      }
     } else {
       // Pause when video is not active
       setIsPlaying(false);
+      playRequestedRef.current = false;
     }
   }, [isActive, playerReady]);
 
@@ -139,9 +182,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Handle manual play button press
   const handlePlayPress = useCallback(() => {
-    console.log('Play button pressed');
+    console.log('Play button pressed - attempting to start playback');
     setShowPlayButton(false);
     setIsPlaying(true);
+    playRequestedRef.current = true;
+
+    // Force player to start via ref (workaround for iOS)
+    if (playerRef.current) {
+      console.log('Calling seekTo(0) to trigger playback');
+      // Seeking to 0 can trigger playback on iOS
+      playerRef.current.seekTo(0);
+    }
   }, []);
 
   // YouTube video player
@@ -162,21 +213,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           forceAndroidAutoplay={true}
           initialPlayerParams={{
             preventFullScreen: false,
-            controls: true, // Enable controls for iOS autoplay
+            controls: true, // Enable controls for iOS
             modestbranding: true,
-            rel: false, // Don't show related videos
+            rel: false,
             showinfo: false,
-            iv_load_policy: 3, // Hide annotations
-            cc_load_policy: 0, // Hide closed captions
-            hl: 'en', // Language
+            iv_load_policy: 3,
+            cc_load_policy: 0,
+            hl: 'en',
+            playsinline: 1, // Important for iOS inline playback
           }}
           webViewStyle={{
-            opacity: 0.99, // Fix for black screen on iOS
+            opacity: 0.99,
           }}
           webViewProps={{
             allowsInlineMediaPlayback: true,
             mediaPlaybackRequiresUserAction: false,
             allowsFullscreenVideo: true,
+            javaScriptEnabled: true, // Ensure JavaScript is enabled
+            domStorageEnabled: true, // Enable DOM storage
+            startInLoadingState: false,
+            scalesPageToFit: true,
           }}
         />
 
