@@ -149,16 +149,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onChangeState={handleStateChange}
           onReady={handleReady}
           onError={handleError}
+          forceAndroidAutoplay={true}
           initialPlayerParams={{
-            preventFullScreen: true,
-            controls: false, // Hide default controls for custom UI
+            preventFullScreen: false,
+            controls: true, // Enable controls for iOS autoplay
             modestbranding: true,
             rel: false, // Don't show related videos
             showinfo: false,
             iv_load_policy: 3, // Hide annotations
             cc_load_policy: 0, // Hide closed captions
             hl: 'en', // Language
-            autoplay: 0, // We control autoplay ourselves
           }}
           webViewStyle={{
             opacity: 0.99, // Fix for black screen on iOS
@@ -166,7 +166,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           webViewProps={{
             allowsInlineMediaPlayback: true,
             mediaPlaybackRequiresUserAction: false,
-            allowsFullscreenVideo: false,
+            allowsFullscreenVideo: true,
           }}
         />
       </View>
