@@ -1,20 +1,41 @@
-# Welcome to your Expo app 👋
+# CineSwipe 🎬
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+CineSwipe - это мобильное приложение для iOS, которое помогает пользователям открывать новые фильмы, сериалы и аниме через короткие видео в формате вертикальной ленты (как TikTok).
 
 ## Get started
 
-1. Install dependencies
+### 1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. Start the app
+### 2. Настройка переменных окружения
 
-   ```bash
-   npx expo start
-   ```
+Для работы приложения необходим API ключ от TMDB (The Movie Database):
+
+1. Зарегистрируйтесь на [TMDB](https://www.themoviedb.org/)
+2. Получите API ключ в [настройках API](https://www.themoviedb.org/settings/api)
+3. Создайте файл `.env` в корне проекта на основе `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+4. Отредактируйте `.env` файл, заменив `your_tmdb_api_key_here` на ваш API ключ:
+
+```
+EXPO_PUBLIC_TMDB_API_KEY=ваш_api_ключ_здесь
+EXPO_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+EXPO_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
+EXPO_PUBLIC_ENV=development
+```
+
+### 3. Start the app
+
+```bash
+npx expo start
+```
 
 In the output, you'll find options to open the app in a
 
